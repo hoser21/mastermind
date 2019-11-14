@@ -180,10 +180,51 @@ RES_VECT  CODE    0x0000            ; processor reset vector
 MAIN_PROG CODE                      ; let linker place main program
 
 START
-
+    GUESS EQU 0x010
     ; TODO Step #5 - Insert Your Program Here
 
     MOVLW 0x55                      ; your instructions
     GOTO $                          ; loop forever
 
+FEEDBACK
+    CODE_COPY EQU 0x020
+  
+    COLOR0 EQU 0x021
+    COLOR1 EQU 0x022
+    COLOR2 EQU 0x023
+    COLOR3 EQU 0x024
+    
+    MOVFF GUESS, CODE_COPY
+    
+    MOVF CODE_COPY, W
+    ANDLW B'00000011'
+    MOVWF COLOR0
+    
+    MOVF CODE_COPY, W
+    ANDLW B'00001100'
+    
+    MOVWF COLOR1
+    
+    MOVF CODE_COPY, W
+    ANDLW B'00110000'
+    MOVWF COLOR2
+    
+    MOVF CODE_COPY, W
+    ANDLW B'11000000'
+    MOVWF COLOR3
+    
+    
+    
+    
+    
+RNG
+    X0 EQU 0x000
+    X1 EQU 0x001
+    X2 EQU 0x002
+    X3 EQU 0x003
+    
+    
+    
+    
+    
     END
