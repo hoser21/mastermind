@@ -232,11 +232,61 @@ START
 ;    MOVWF 0x011
 ;    ; B = 1 W = 3
 
+#include <p18f46k22.inc>
+
+GOTO Main
+ 
+Main:
+    ;set up counters
+    Count0 EQU 0xE0
+    Count1 EQU 0xE1
+    Count2 EQU 0xE2 ;counter for delays
+ 
+    ;here will be setting up the ports for the physical board - PORTA, PORTD, LCD
+    ;calling our other subroutines
+    ;using temp wr and rd
+    ;CPURandom1 EQU 0xC0
+    ;CPURandom2 EQU 0xC1
+    ;CPURandom3 EQU 0xC2
+
 RNG
-    X0 EQU 0x000
-    X1 EQU 0x001
-    X2 EQU 0x002
-    X3 EQU 0x003
+    CPURAND0 EQU 0x0
+    CPURAND1 EQU 0x1
+    CPURAND2 EQU 0x2
+ 
+    ;initialize counters to zero
+    MOVLW 0H
+    MOVWF CPURAND0
+    MOVLW 0H
+    MOVWF CPURAND1
+    MOVLW 0H
+    MOVWF CPURAND2
+    
+    ;downward count
+    MOVLW 5H
+    MOVWF 0xD1
+    MOVLW 5H
+    MOVWF 0xD2
+    MOVLW 5H
+    MOVWF 0xD3
+    
+    ;begin the random number generator for play to guess
+    ;register to register counts
+    RCOUNT1 MOVLW 0H
+	   MOVWF CPURAND1
+    RCOUNT2 MOVLW 0H
+	   MOVWF CPURAND2
+	   MOVLW 5H
+	   MOVWF 0xD3
+    RCOUNT3 INCF CPURAND2
+	   DECFSZ 0xD3		;skip next instruction if zero
+	   BRA COUNT3		;jump back to top
+	   INCF CPURAND1	;increase register
+	   DECFSZ 0xD2		;skip next instruction if zero
+	   BRA RCOUNT2		;jump back to register that holds count 2
+	   INCF CPURAND0	
+	   DECFSZ 0xD1		
+	   BRA RCOUNT1
  
     CODE0 EQU 0x004
     CODE1 EQU 0x005
