@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=Mastermind.X
+PROJECTNAME=mastermind
 
 # Active Configuration
 DEFAULTCONF=default

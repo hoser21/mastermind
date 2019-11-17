@@ -6,8 +6,8 @@
 CND_BASEDIR=`pwd`
 # default configuration
 CND_ARTIFACT_DIR_default=dist/default/production
-CND_ARTIFACT_NAME_default=Mastermind.X.production.hex
-CND_ARTIFACT_PATH_default=dist/default/production/Mastermind.X.production.hex
+CND_ARTIFACT_NAME_default=mastermind.production.hex
+CND_ARTIFACT_PATH_default=dist/default/production/mastermind.production.hex
 CND_PACKAGE_DIR_default=${CND_DISTDIR}/default/package
-CND_PACKAGE_NAME_default=mastermind.x.tar
-CND_PACKAGE_PATH_default=${CND_DISTDIR}/default/package/mastermind.x.tar
+CND_PACKAGE_NAME_default=mastermind.tar
+CND_PACKAGE_PATH_default=${CND_DISTDIR}/default/package/mastermind.tar

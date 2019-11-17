@@ -180,6 +180,57 @@ RES_VECT  CODE    0x0000            ; processor reset vector
 MAIN_PROG CODE                      ; let linker place main program
 
 START
+;    ; test 1
+;    ; initialize code  0123
+;    MOVLW H'01'
+;    MOVWF 0x004
+;    MOVLW H'23'
+;    MOVWF 0x005
+;    ; initialize guess 1023
+;    MOVLW H'10'
+;    MOVWF 0x010
+;    MOVLW H'23'
+;    MOVWF 0x011
+;    ; B = 2 W = 2
+
+;    ; test 2
+;    ; initialize code  0111
+;    MOVLW H'01'
+;    MOVWF 0x004
+;    MOVLW H'11'
+;    MOVWF 0x005
+;    ; initialize guess 1000
+;    MOVLW H'10'
+;    MOVWF 0x010
+;    MOVLW H'00'
+;    MOVWF 0x011
+;    ; B = 0 W = 2
+
+;    ; test 3
+;    ; initialize code  5411
+;    MOVLW H'54'
+;    MOVWF 0x004
+;    MOVLW H'11'
+;    MOVWF 0x005
+;    ; initialize guess 5114
+;    MOVLW H'51'
+;    MOVWF 0x010
+;    MOVLW H'14'
+;    MOVWF 0x011
+;    ; B = 2 W = 2
+
+;    ; test 4
+;    ; initialize code  0133
+;    MOVLW H'01'
+;    MOVWF 0x004
+;    MOVLW H'33'
+;    MOVWF 0x005
+;    ; initialize guess 3013
+;    MOVLW H'30'
+;    MOVWF 0x010
+;    MOVLW H'13'
+;    MOVWF 0x011
+;    ; B = 1 W = 3
 
 RNG
     X0 EQU 0x000
@@ -194,12 +245,15 @@ RNG
     GUESS1 EQU 0x011
 
 FEEDBACK
-    ; unpack the guess into individual registers  
+    ; unpack the guess into individual registers 
+    
+    ; unpacked code vars
     COLOR0 EQU 0x020
     COLOR1 EQU 0x021
     COLOR2 EQU 0x022
     COLOR3 EQU 0x023
     
+    ; unpacked guess vars
     FB0 EQU 0x024
     FB1 EQU 0x025
     FB2 EQU 0x026
@@ -249,12 +303,16 @@ FEEDBACK
     ANDWF COLOR3, F
     ANDWF FB3, F
     
-    ; count the blacks and whites
+    ; initialize the blacks and whites
     BLACKS EQU 0x030
     WHITES EQU 0x031
     CLRF BLACKS
     CLRF WHITES
-    
+   
+; count the blacks
+;   checking if (COLOR == FB)
+;   if so, increment blacks and mark both COLOR and FB with a flag
+;   by setting bit 7 of both to high, so we don't count it as a white
 BLACK_CHECK3
     MOVF FB3, W
     CPFSEQ COLOR3
@@ -282,19 +340,29 @@ BLACK_CHECK1
 BLACK_CHECK0
     MOVF FB0, W
     CPFSEQ COLOR0
-    GOTO WHITE_CHECK0
+    GOTO WHITE_CHECK3
     INCF BLACKS
     BSF FB0, 7
     BSF COLOR0, 7
 
+; count the whites
+;   check if FB matches a COLOR that doesn't already have a flag and 
+;   doesn't share the same location (if it did, it would be a black)
+;   if so, increment whites and mark FB and COLOR with a flag
+;   else, check if FB matches any other color using the orignial check condition
 WHITE_CHECK3
-    ; check for color matches if this guess hasn't been counted as a white
+    ; compare FB3 with COLOR2, COLOR1, and COLOR0
+    ; if FB is flagged, it is marked as a black, so go to the next FB
     BTFSC FB3, 7
     GOTO WHITE_CHECK2
+    
     MOVF FB3, W
-    ; skip this color if it was counted as a black
+    
+    ; if COLOR is flagged, check the next color
     BTFSC COLOR2, 7
     GOTO WHITE_CHECK3_1
+    
+    ; if FB == COLOR, increment white, flag COLOR, and check next FB
     CPFSEQ COLOR2
     GOTO WHITE_CHECK3_1
     INCF WHITES
@@ -303,22 +371,139 @@ WHITE_CHECK3
     
 WHITE_CHECK3_1
     BTFSC COLOR1, 7
+    GOTO WHITE_CHECK3_0
+    
+    CPFSEQ COLOR1
+    GOTO WHITE_CHECK3_0
+    INCF WHITES
+    BSF COLOR1, 7
     GOTO WHITE_CHECK2
-    B
 
-WHITE_CHECK3_0   
-
+WHITE_CHECK3_0
+    BTFSC COLOR0, 7
+    GOTO WHITE_CHECK2
+    
+    CPFSEQ COLOR0
+    GOTO WHITE_CHECK2
+    INCF WHITES
+    BSF COLOR0, 7
+    
+; --------
 WHITE_CHECK2
-    BTFSS FB2, 7
+    ; compare FB2 with COLOR3, COLOR1, and COLOR0
+    ; if FB is flagged, it is marked as a black, so go to the next FB
+    BTFSC FB2, 7
     GOTO WHITE_CHECK1
     
+    MOVF FB2, W
+    
+    ; if COLOR is flagged, check the next color
+    BTFSC COLOR3, 7
+    GOTO WHITE_CHECK2_1
+    
+    ; if FB == COLOR, increment white, flag COLOR, and check next FB
+    CPFSEQ COLOR3
+    GOTO WHITE_CHECK2_1
+    INCF WHITES
+    BSF COLOR3, 7
+    GOTO WHITE_CHECK1
+    
+WHITE_CHECK2_1
+    BTFSC COLOR1, 7
+    GOTO WHITE_CHECK2_0
+    
+    CPFSEQ COLOR1
+    GOTO WHITE_CHECK2_0
+    INCF WHITES
+    BSF COLOR1, 7
+    GOTO WHITE_CHECK1
+
+WHITE_CHECK2_0
+    BTFSC COLOR0, 7
+    GOTO WHITE_CHECK1
+    
+    CPFSEQ COLOR0
+    GOTO WHITE_CHECK1
+    INCF WHITES
+    BSF COLOR0, 7
+   
+; --------
 WHITE_CHECK1
-    BTFSS FB1, 7
+    ; compare FB1 with COLOR3, COLOR2, and COLOR0
+    ; if FB is flagged, it is marked as a black, so go to the next FB
+    BTFSC FB1, 7
     GOTO WHITE_CHECK0
     
+    MOVF FB1, W
+    
+    ; if COLOR is flagged, check the next color
+    BTFSC COLOR3, 7
+    GOTO WHITE_CHECK1_2
+    
+    ; if FB == COLOR, increment white, flag COLOR, and check next FB
+    CPFSEQ COLOR3
+    GOTO WHITE_CHECK1_2
+    INCF WHITES
+    BSF COLOR3, 7
+    GOTO WHITE_CHECK0
+    
+WHITE_CHECK1_2
+    BTFSC COLOR2, 7
+    GOTO WHITE_CHECK1_0
+    
+    CPFSEQ COLOR2
+    GOTO WHITE_CHECK1_0
+    INCF WHITES
+    BSF COLOR2, 7
+    GOTO WHITE_CHECK0
+
+WHITE_CHECK1_0
+    BTFSC COLOR0, 7
+    GOTO WHITE_CHECK0
+    
+    CPFSEQ COLOR0
+    GOTO WHITE_CHECK0
+    INCF WHITES
+    BSF COLOR0, 7
+    
+; --------
 WHITE_CHECK0
-    BTFSS FB0, 7
+    ; compare FB0 with COLOR3, COLOR2, and COLOR1
+    ; if FB is flagged, it is marked as a black, so go to the next FB
+    BTFSC FB0, 7
     GOTO FEEDBACK_END
+    
+    MOVF FB0, W
+    
+    ; if COLOR is flagged, check the next color
+    BTFSC COLOR3, 7
+    GOTO WHITE_CHECK0_2
+    
+    ; if FB == COLOR, increment white, flag COLOR, and check next FB
+    CPFSEQ COLOR3
+    GOTO WHITE_CHECK0_2
+    INCF WHITES
+    BSF COLOR3, 7
+    GOTO FEEDBACK_END
+    
+WHITE_CHECK0_2
+    BTFSC COLOR2, 7
+    GOTO WHITE_CHECK0_1
+    
+    CPFSEQ COLOR2
+    GOTO WHITE_CHECK0_1
+    INCF WHITES
+    BSF COLOR2, 7
+    GOTO FEEDBACK_END
+
+WHITE_CHECK0_1
+    BTFSC COLOR1, 7
+    GOTO FEEDBACK_END
+    
+    CPFSEQ COLOR1
+    GOTO FEEDBACK_END
+    INCF WHITES
+    BSF COLOR1, 7
     
 FEEDBACK_END
  

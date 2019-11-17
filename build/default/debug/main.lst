@@ -1,0 +1,643 @@
+MPASM 5.86                          MAIN.ASM   11-16-2019  17:05:14         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;*******************************************************************************
+                      00002 ;                                                                              *
+                      00003 ;    Microchip licenses this software to you solely for use with Microchip     *
+                      00004 ;    products. The software is owned by Microchip and/or its licensors, and is *
+                      00005 ;    protected under applicable copyright laws.  All rights reserved.          *
+                      00006 ;                                                                              *
+                      00007 ;    This software and any accompanying information is for suggestion only.    *
+                      00008 ;    It shall not be deemed to modify Microchip?s standard warranty for its    *
+                      00009 ;    products.  It is your responsibility to ensure that this software meets   *
+                      00010 ;    your requirements.                                                        *
+                      00011 ;                                                                              *
+                      00012 ;    SOFTWARE IS PROVIDED "AS IS".  MICROCHIP AND ITS LICENSORS EXPRESSLY      *
+                      00013 ;    DISCLAIM ANY WARRANTY OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING  *
+                      00014 ;    BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS    *
+                      00015 ;    FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. IN NO EVENT SHALL          *
+                      00016 ;    MICROCHIP OR ITS LICENSORS BE LIABLE FOR ANY INCIDENTAL, SPECIAL,         *
+                      00017 ;    INDIRECT OR CONSEQUENTIAL DAMAGES, LOST PROFITS OR LOST DATA, HARM TO     *
+                      00018 ;    YOUR EQUIPMENT, COST OF PROCUREMENT OF SUBSTITUTE GOODS, TECHNOLOGY OR    *
+                      00019 ;    SERVICES, ANY CLAIMS BY THIRD PARTIES (INCLUDING BUT NOT LIMITED TO ANY   *
+                      00020 ;    DEFENSE THEREOF), ANY CLAIMS FOR INDEMNITY OR CONTRIBUTION, OR OTHER      *
+                      00021 ;    SIMILAR COSTS.                                                            *
+                      00022 ;                                                                              *
+                      00023 ;    To the fullest extend allowed by law, Microchip and its licensors         *
+                      00024 ;    liability shall not exceed the amount of fee, if any, that you have paid  *
+                      00025 ;    directly to Microchip to use this software.                               *
+                      00026 ;                                                                              *
+                      00027 ;    MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF    *
+                      00028 ;    THESE TERMS.                                                              *
+                      00029 ;                                                                              *
+                      00030 ;*******************************************************************************
+                      00031 ;                                                                              *
+                      00032 ;    Filename:                                                                 *
+                      00033 ;    Date:                                                                     *
+                      00034 ;    File Version:                                                             *
+                      00035 ;    Author:                                                                   *
+                      00036 ;    Company:                                                                  *
+                      00037 ;    Description:                                                              *
+                      00038 ;                                                                              *
+                      00039 ;*******************************************************************************
+                      00040 ;                                                                              *
+                      00041 ;    Notes: In the MPLAB X Help, refer to the MPASM Assembler documentation    *
+                      00042 ;    for information on assembly instructions.                                 *
+                      00043 ;                                                                              *
+                      00044 ;*******************************************************************************
+                      00045 ;                                                                              *
+                      00046 ;    Known Issues: This template is designed for relocatable code.  As such,   *
+                      00047 ;    build errors such as "Directive only allowed when generating an object    *
+                      00048 ;    file" will result when the 'Build in Absolute Mode' checkbox is selected  *
+                      00049 ;    in the project properties.  Designing code in absolute mode is            *
+                      00050 ;    antiquated - use relocatable mode.                                        *
+                      00051 ;                                                                              *
+                      00052 ;*******************************************************************************
+                      00053 ;                                                                              *
+MPASM 5.86                          MAIN.ASM   11-16-2019  17:05:14         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00054 ;    Revision History:                                                         *
+                      00055 ;                                                                              *
+                      00056 ;*******************************************************************************
+                      00057 
+                      00058 
+                      00059 
+                      00060 ;*******************************************************************************
+                      00061 ; Processor Inclusion
+                      00062 ;
+                      00063 ; TODO Step #1 Open the task list under Window > Tasks.  Include your
+                      00064 ; device .inc file - e.g. #include <device_name>.inc.  Available
+                      00065 ; include files are in C:\Program Files\Microchip\MPLABX\mpasmx
+                      00066 ; assuming the default installation path for MPLAB X.  You may manually find
+                      00067 ; the appropriate include file for your device here and include it, or
+                      00068 ; simply copy the include generated by the configuration bits
+                      00069 ; generator (see Step #2).
+                      00070 ;
+                      00071 ;*******************************************************************************
+                      00072 
+                      00073 ; TODO INSERT INCLUDE CODE HERE
+                      00074 
+                      00075 ;*******************************************************************************
+                      00076 ;
+                      00077 ; TODO Step #2 - Configuration Word Setup
+                      00078 ;
+                      00079 ; The 'CONFIG' directive is used to embed the configuration word within the
+                      00080 ; .asm file. MPLAB X requires users to embed their configuration words
+                      00081 ; into source code.  See the device datasheet for additional information
+                      00082 ; on configuration word settings.  Device configuration bits descriptions
+                      00083 ; are in C:\Program Files\Microchip\MPLABX\mpasmx\P<device_name>.inc
+                      00084 ; (may change depending on your MPLAB X installation directory).
+                      00085 ;
+                      00086 ; MPLAB X has a feature which generates configuration bits source code.  Go to
+                      00087 ; Window > PIC Memory Views > Configuration Bits.  Configure each field as
+                      00088 ; needed and select 'Generate Source Code to Output'.  The resulting code which
+                      00089 ; appears in the 'Output Window' > 'Config Bits Source' tab may be copied
+                      00090 ; below.
+                      00091 ;
+                      00092 ;*******************************************************************************
+                      00093 
+                      00094 ; TODO INSERT CONFIG HERE
+                      00095 
+                      00096 ;*******************************************************************************
+                      00097 ;
+                      00098 ; TODO Step #3 - Variable Definitions
+                      00099 ;
+                      00100 ; Refer to datasheet for available data memory (RAM) organization assuming
+                      00101 ; relocatible code organization (which is an option in project
+                      00102 ; properties > mpasm (Global Options)).  Absolute mode generally should
+                      00103 ; be used sparingly.
+                      00104 ;
+                      00105 ; Example of using GPR Uninitialized Data
+                      00106 ;
+MPASM 5.86                          MAIN.ASM   11-16-2019  17:05:14         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00107 ;   GPR_VAR        UDATA
+                      00108 ;   MYVAR1         RES        1      ; User variable linker places
+                      00109 ;   MYVAR2         RES        1      ; User variable linker places
+                      00110 ;   MYVAR3         RES        1      ; User variable linker places
+                      00111 ;
+                      00112 ;   ; Example of using Access Uninitialized Data Section (when available)
+                      00113 ;   ; The variables for the context saving in the device datasheet may need
+                      00114 ;   ; memory reserved here.
+                      00115 ;   INT_VAR        UDATA_ACS
+                      00116 ;   W_TEMP         RES        1      ; w register for context saving (ACCESS)
+                      00117 ;   STATUS_TEMP    RES        1      ; status used for context saving
+                      00118 ;   BSR_TEMP       RES        1      ; bank select used for ISR context saving
+                      00119 ;
+                      00120 ;*******************************************************************************
+                      00121 
+                      00122 ; TODO PLACE VARIABLE DEFINITIONS GO HERE
+                      00123 
+                      00124 ;*******************************************************************************
+                      00125 ; Reset Vector
+                      00126 ;*******************************************************************************
+                      00127 
+                      00128 RES_VECT  CODE    0x0000            ; processor reset vector
+000000 EF?? F???      00129     GOTO    START                   ; go to beginning of program
+                      00130 
+                      00131 ;*******************************************************************************
+                      00132 ; TODO Step #4 - Interrupt Service Routines
+                      00133 ;
+                      00134 ; There are a few different ways to structure interrupt routines in the 8
+                      00135 ; bit device families.  On PIC18's the high priority and low priority
+                      00136 ; interrupts are located at 0x0008 and 0x0018, respectively.  On PIC16's and
+                      00137 ; lower the interrupt is at 0x0004.  Between device families there is subtle
+                      00138 ; variation in the both the hardware supporting the ISR (for restoring
+                      00139 ; interrupt context) as well as the software used to restore the context
+                      00140 ; (without corrupting the STATUS bits).
+                      00141 ;
+                      00142 ; General formats are shown below in relocatible format.
+                      00143 ;
+                      00144 ;------------------------------PIC16's and below--------------------------------
+                      00145 ;
+                      00146 ; ISR       CODE    0x0004           ; interrupt vector location
+                      00147 ;
+                      00148 ;     <Search the device datasheet for 'context' and copy interrupt
+                      00149 ;     context saving code here.  Older devices need context saving code,
+                      00150 ;     but newer devices like the 16F#### don't need context saving code.>
+                      00151 ;
+                      00152 ;     RETFIE
+                      00153 ;
+                      00154 ;----------------------------------PIC18's--------------------------------------
+                      00155 ;
+                      00156 ; ISRHV     CODE    0x0008
+                      00157 ;     GOTO    HIGH_ISR
+                      00158 ; ISRLV     CODE    0x0018
+                      00159 ;     GOTO    LOW_ISR
+MPASM 5.86                          MAIN.ASM   11-16-2019  17:05:14         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00160 ;
+                      00161 ; ISRH      CODE                     ; let linker place high ISR routine
+                      00162 ; HIGH_ISR
+                      00163 ;     <Insert High Priority ISR Here - no SW context saving>
+                      00164 ;     RETFIE  FAST
+                      00165 ;
+                      00166 ; ISRL      CODE                     ; let linker place low ISR routine
+                      00167 ; LOW_ISR
+                      00168 ;       <Search the device datasheet for 'context' and copy interrupt
+                      00169 ;       context saving code here>
+                      00170 ;     RETFIE
+                      00171 ;
+                      00172 ;*******************************************************************************
+                      00173 
+                      00174 ; TODO INSERT ISR HERE
+                      00175 
+                      00176 ;*******************************************************************************
+                      00177 ; MAIN PROGRAM
+                      00178 ;*******************************************************************************
+                      00179 
+                      00180 MAIN_PROG CODE                      ; let linker place main program
+                      00181 
+000000                00182 START
+                      00183 ;    ; test 1
+                      00184 ;    ; initialize code  0123
+                      00185 ;    MOVLW H'01'
+                      00186 ;    MOVWF 0x004
+                      00187 ;    MOVLW H'23'
+                      00188 ;    MOVWF 0x005
+                      00189 ;    ; initialize guess 1023
+                      00190 ;    MOVLW H'10'
+                      00191 ;    MOVWF 0x010
+                      00192 ;    MOVLW H'23'
+                      00193 ;    MOVWF 0x011
+                      00194 ;    ; B = 2 W = 2
+                      00195 
+                      00196 ;    ; test 2
+                      00197 ;    ; initialize code  0111
+                      00198 ;    MOVLW H'01'
+                      00199 ;    MOVWF 0x004
+                      00200 ;    MOVLW H'11'
+                      00201 ;    MOVWF 0x005
+                      00202 ;    ; initialize guess 1000
+                      00203 ;    MOVLW H'10'
+                      00204 ;    MOVWF 0x010
+                      00205 ;    MOVLW H'00'
+                      00206 ;    MOVWF 0x011
+                      00207 ;    ; B = 0 W = 2
+                      00208 
+                      00209 ;    ; test 3
+                      00210 ;    ; initialize code  5411
+                      00211 ;    MOVLW H'54'
+                      00212 ;    MOVWF 0x004
+MPASM 5.86                          MAIN.ASM   11-16-2019  17:05:14         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00213 ;    MOVLW H'11'
+                      00214 ;    MOVWF 0x005
+                      00215 ;    ; initialize guess 5114
+                      00216 ;    MOVLW H'51'
+                      00217 ;    MOVWF 0x010
+                      00218 ;    MOVLW H'14'
+                      00219 ;    MOVWF 0x011
+                      00220 ;    ; B = 2 W = 2
+                      00221 
+                      00222 ;    ; test 4
+                      00223     ; initialize code  0133
+000000 0E01           00224     MOVLW H'01'
+000002 6E04           00225     MOVWF 0x004
+000004 0E33           00226     MOVLW H'33'
+000006 6E05           00227     MOVWF 0x005
+                      00228     ; initialize guess 3013
+000008 0E30           00229     MOVLW H'30'
+00000A 6E10           00230     MOVWF 0x010
+00000C 0E13           00231     MOVLW H'13'
+00000E 6E11           00232     MOVWF 0x011
+                      00233     ; B = 1 W = 3
+                      00234 
+000010                00235 RNG
+Warning[207]: Found label after column 1. (X0)
+  00000000            00236     X0 EQU 0x000
+Warning[207]: Found label after column 1. (X1)
+  00000001            00237     X1 EQU 0x001
+Warning[207]: Found label after column 1. (X2)
+  00000002            00238     X2 EQU 0x002
+Warning[207]: Found label after column 1. (X3)
+  00000003            00239     X3 EQU 0x003
+                      00240  
+Warning[207]: Found label after column 1. (CODE0)
+  00000004            00241     CODE0 EQU 0x004
+Warning[207]: Found label after column 1. (CODE1)
+  00000005            00242     CODE1 EQU 0x005
+                      00243  
+Warning[207]: Found label after column 1. (GUESS0)
+  00000010            00244     GUESS0 EQU 0x010
+Warning[207]: Found label after column 1. (GUESS1)
+  00000011            00245     GUESS1 EQU 0x011
+                      00246 
+000010                00247 FEEDBACK
+                      00248     ; unpack the guess into individual registers 
+                      00249     
+                      00250     ; unpacked code vars
+Warning[207]: Found label after column 1. (COLOR0)
+  00000020            00251     COLOR0 EQU 0x020
+Warning[207]: Found label after column 1. (COLOR1)
+  00000021            00252     COLOR1 EQU 0x021
+Warning[207]: Found label after column 1. (COLOR2)
+  00000022            00253     COLOR2 EQU 0x022
+Warning[207]: Found label after column 1. (COLOR3)
+MPASM 5.86                          MAIN.ASM   11-16-2019  17:05:14         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+  00000023            00254     COLOR3 EQU 0x023
+                      00255     
+                      00256     ; unpacked guess vars
+Warning[207]: Found label after column 1. (FB0)
+  00000024            00257     FB0 EQU 0x024
+Warning[207]: Found label after column 1. (FB1)
+  00000025            00258     FB1 EQU 0x025
+Warning[207]: Found label after column 1. (FB2)
+  00000026            00259     FB2 EQU 0x026
+Warning[207]: Found label after column 1. (FB3)
+  00000027            00260     FB3 EQU 0x027
+                      00261     
+                      00262     ; unpack first bype of code/guess
+000010 C004 F020      00263     MOVFF CODE0, COLOR0
+000014 C010 F024      00264     MOVFF GUESS0, FB0    
+000018 0EF0           00265     MOVLW H'F0'
+00001A 1620           00266     ANDWF COLOR0, F
+00001C 3220           00267     RRCF COLOR0, F
+00001E 3220           00268     RRCF COLOR0, F
+000020 3220           00269     RRCF COLOR0, F
+000022 3220           00270     RRCF COLOR0, F
+000024 1624           00271     ANDWF FB0, F
+000026 3224           00272     RRCF FB0, F
+000028 3224           00273     RRCF FB0, F
+00002A 3224           00274     RRCF FB0, F
+00002C 3224           00275     RRCF FB0, F
+                      00276     
+                      00277     ; unpack second bype of code/guess
+00002E C004 F021      00278     MOVFF CODE0, COLOR1
+000032 C010 F025      00279     MOVFF GUESS0, FB1  
+000036 0E0F           00280     MOVLW H'0F'
+000038 1621           00281     ANDWF COLOR1, F
+00003A 1625           00282     ANDWF FB1, F
+                      00283     
+                      00284     ; unpack third bype of code/guess
+00003C C005 F022      00285     MOVFF CODE1, COLOR2
+000040 C011 F026      00286     MOVFF GUESS1, FB2
+000044 0EF0           00287     MOVLW H'F0'
+000046 1622           00288     ANDWF COLOR2, F
+000048 3222           00289     RRCF COLOR2, F
+00004A 3222           00290     RRCF COLOR2, F
+00004C 3222           00291     RRCF COLOR2, F
+00004E 3222           00292     RRCF COLOR2, F
+000050 1626           00293     ANDWF FB2, F
+000052 3226           00294     RRCF FB2, F
+000054 3226           00295     RRCF FB2, F
+000056 3226           00296     RRCF FB2, F
+000058 3226           00297     RRCF FB2, F
+                      00298     
+                      00299     ; unpack forth bype of code/guess
+00005A C005 F023      00300     MOVFF CODE1, COLOR3
+00005E C011 F027      00301     MOVFF GUESS1, FB3  
+000062 0E0F           00302     MOVLW H'0F'
+MPASM 5.86                          MAIN.ASM   11-16-2019  17:05:14         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000064 1623           00303     ANDWF COLOR3, F
+000066 1627           00304     ANDWF FB3, F
+                      00305     
+                      00306     ; initialize the blacks and whites
+Warning[207]: Found label after column 1. (BLACKS)
+  00000030            00307     BLACKS EQU 0x030
+Warning[207]: Found label after column 1. (WHITES)
+  00000031            00308     WHITES EQU 0x031
+000068 6A30           00309     CLRF BLACKS
+00006A 6A31           00310     CLRF WHITES
+                      00311    
+                      00312 ; count the blacks
+                      00313 ;   checking if (COLOR == FB)
+                      00314 ;   if so, increment blacks and mark both COLOR and FB with a flag
+                      00315 ;   by setting bit 7 of both to high, so we don't count it as a white
+00006C                00316 BLACK_CHECK3
+00006C 5027           00317     MOVF FB3, W
+00006E 6223           00318     CPFSEQ COLOR3
+000070 EF?? F???      00319     GOTO BLACK_CHECK2
+000074 2A30           00320     INCF BLACKS
+000076 8E27           00321     BSF FB3, 7
+000078 8E23           00322     BSF COLOR3, 7
+                      00323     
+00007A                00324 BLACK_CHECK2
+00007A 5026           00325     MOVF FB2, W
+00007C 6222           00326     CPFSEQ COLOR2
+00007E EF?? F???      00327     GOTO BLACK_CHECK1
+000082 2A30           00328     INCF BLACKS
+000084 8E26           00329     BSF FB2, 7
+000086 8E22           00330     BSF COLOR2, 7
+                      00331     
+000088                00332 BLACK_CHECK1
+000088 5025           00333     MOVF FB1, W
+00008A 6221           00334     CPFSEQ COLOR1
+00008C EF?? F???      00335     GOTO BLACK_CHECK0
+000090 2A30           00336     INCF BLACKS
+000092 8E25           00337     BSF FB1, 7
+000094 8E21           00338     BSF COLOR1, 7
+                      00339     
+000096                00340 BLACK_CHECK0
+000096 5024           00341     MOVF FB0, W
+000098 6220           00342     CPFSEQ COLOR0
+00009A EF?? F???      00343     GOTO WHITE_CHECK3
+00009E 2A30           00344     INCF BLACKS
+0000A0 8E24           00345     BSF FB0, 7
+0000A2 8E20           00346     BSF COLOR0, 7
+                      00347 
+                      00348 ; count the whites
+                      00349 ;   check if FB matches a COLOR that doesn't already have a flag and 
+                      00350 ;   doesn't share the same location (if it did, it would be a black)
+                      00351 ;   if so, increment whites and mark FB and COLOR with a flag
+                      00352 ;   else, check if FB matches any other color using the orignial check condition
+0000A4                00353 WHITE_CHECK3
+MPASM 5.86                          MAIN.ASM   11-16-2019  17:05:14         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00354     ; compare FB3 with COLOR2, COLOR1, and COLOR0
+                      00355     ; if FB is flagged, it is marked as a black, so go to the next FB
+0000A4 BE27           00356     BTFSC FB3, 7
+0000A6 EF?? F???      00357     GOTO WHITE_CHECK2
+                      00358     
+0000AA 5027           00359     MOVF FB3, W
+                      00360     
+                      00361     ; if COLOR is flagged, check the next color
+0000AC BE22           00362     BTFSC COLOR2, 7
+0000AE EF?? F???      00363     GOTO WHITE_CHECK3_1
+                      00364     
+                      00365     ; if FB == COLOR, increment white, flag COLOR, and check next FB
+0000B2 6222           00366     CPFSEQ COLOR2
+0000B4 EF?? F???      00367     GOTO WHITE_CHECK3_1
+0000B8 2A31           00368     INCF WHITES
+0000BA 8E22           00369     BSF COLOR2, 7
+0000BC EF?? F???      00370     GOTO WHITE_CHECK2
+                      00371     
+0000C0                00372 WHITE_CHECK3_1
+0000C0 BE21           00373     BTFSC COLOR1, 7
+0000C2 EF?? F???      00374     GOTO WHITE_CHECK3_0
+                      00375     
+0000C6 6221           00376     CPFSEQ COLOR1
+0000C8 EF?? F???      00377     GOTO WHITE_CHECK3_0
+0000CC 2A31           00378     INCF WHITES
+0000CE 8E21           00379     BSF COLOR1, 7
+0000D0 EF?? F???      00380     GOTO WHITE_CHECK2
+                      00381 
+0000D4                00382 WHITE_CHECK3_0
+0000D4 BE20           00383     BTFSC COLOR0, 7
+0000D6 EF?? F???      00384     GOTO WHITE_CHECK2
+                      00385     
+0000DA 6220           00386     CPFSEQ COLOR0
+0000DC EF?? F???      00387     GOTO WHITE_CHECK2
+0000E0 2A31           00388     INCF WHITES
+0000E2 8E20           00389     BSF COLOR0, 7
+                      00390     
+                      00391 ; --------
+0000E4                00392 WHITE_CHECK2
+                      00393     ; compare FB2 with COLOR3, COLOR1, and COLOR0
+                      00394     ; if FB is flagged, it is marked as a black, so go to the next FB
+0000E4 BE26           00395     BTFSC FB2, 7
+0000E6 EF?? F???      00396     GOTO WHITE_CHECK1
+                      00397     
+0000EA 5026           00398     MOVF FB2, W
+                      00399     
+                      00400     ; if COLOR is flagged, check the next color
+0000EC BE23           00401     BTFSC COLOR3, 7
+0000EE EF?? F???      00402     GOTO WHITE_CHECK2_1
+                      00403     
+                      00404     ; if FB == COLOR, increment white, flag COLOR, and check next FB
+0000F2 6223           00405     CPFSEQ COLOR3
+0000F4 EF?? F???      00406     GOTO WHITE_CHECK2_1
+MPASM 5.86                          MAIN.ASM   11-16-2019  17:05:14         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0000F8 2A31           00407     INCF WHITES
+0000FA 8E23           00408     BSF COLOR3, 7
+0000FC EF?? F???      00409     GOTO WHITE_CHECK1
+                      00410     
+000100                00411 WHITE_CHECK2_1
+000100 BE21           00412     BTFSC COLOR1, 7
+000102 EF?? F???      00413     GOTO WHITE_CHECK2_0
+                      00414     
+000106 6221           00415     CPFSEQ COLOR1
+000108 EF?? F???      00416     GOTO WHITE_CHECK2_0
+00010C 2A31           00417     INCF WHITES
+00010E 8E21           00418     BSF COLOR1, 7
+000110 EF?? F???      00419     GOTO WHITE_CHECK1
+                      00420 
+000114                00421 WHITE_CHECK2_0
+000114 BE20           00422     BTFSC COLOR0, 7
+000116 EF?? F???      00423     GOTO WHITE_CHECK1
+                      00424     
+00011A 6220           00425     CPFSEQ COLOR0
+00011C EF?? F???      00426     GOTO WHITE_CHECK1
+000120 2A31           00427     INCF WHITES
+000122 8E20           00428     BSF COLOR0, 7
+                      00429    
+                      00430 ; --------
+000124                00431 WHITE_CHECK1
+                      00432     ; compare FB1 with COLOR3, COLOR2, and COLOR0
+                      00433     ; if FB is flagged, it is marked as a black, so go to the next FB
+000124 BE25           00434     BTFSC FB1, 7
+000126 EF?? F???      00435     GOTO WHITE_CHECK0
+                      00436     
+00012A 5025           00437     MOVF FB1, W
+                      00438     
+                      00439     ; if COLOR is flagged, check the next color
+00012C BE23           00440     BTFSC COLOR3, 7
+00012E EF?? F???      00441     GOTO WHITE_CHECK1_2
+                      00442     
+                      00443     ; if FB == COLOR, increment white, flag COLOR, and check next FB
+000132 6223           00444     CPFSEQ COLOR3
+000134 EF?? F???      00445     GOTO WHITE_CHECK1_2
+000138 2A31           00446     INCF WHITES
+00013A 8E23           00447     BSF COLOR3, 7
+00013C EF?? F???      00448     GOTO WHITE_CHECK0
+                      00449     
+000140                00450 WHITE_CHECK1_2
+000140 BE22           00451     BTFSC COLOR2, 7
+000142 EF?? F???      00452     GOTO WHITE_CHECK1_0
+                      00453     
+000146 6222           00454     CPFSEQ COLOR2
+000148 EF?? F???      00455     GOTO WHITE_CHECK1_0
+00014C 2A31           00456     INCF WHITES
+00014E 8E22           00457     BSF COLOR2, 7
+000150 EF?? F???      00458     GOTO WHITE_CHECK0
+                      00459 
+MPASM 5.86                          MAIN.ASM   11-16-2019  17:05:14         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000154                00460 WHITE_CHECK1_0
+000154 BE20           00461     BTFSC COLOR0, 7
+000156 EF?? F???      00462     GOTO WHITE_CHECK0
+                      00463     
+00015A 6220           00464     CPFSEQ COLOR0
+00015C EF?? F???      00465     GOTO WHITE_CHECK0
+000160 2A31           00466     INCF WHITES
+000162 8E20           00467     BSF COLOR0, 7
+                      00468     
+                      00469 ; --------
+000164                00470 WHITE_CHECK0
+                      00471     ; compare FB0 with COLOR3, COLOR2, and COLOR1
+                      00472     ; if FB is flagged, it is marked as a black, so go to the next FB
+000164 BE24           00473     BTFSC FB0, 7
+000166 EF?? F???      00474     GOTO FEEDBACK_END
+                      00475     
+00016A 5024           00476     MOVF FB0, W
+                      00477     
+                      00478     ; if COLOR is flagged, check the next color
+00016C BE23           00479     BTFSC COLOR3, 7
+00016E EF?? F???      00480     GOTO WHITE_CHECK0_2
+                      00481     
+                      00482     ; if FB == COLOR, increment white, flag COLOR, and check next FB
+000172 6223           00483     CPFSEQ COLOR3
+000174 EF?? F???      00484     GOTO WHITE_CHECK0_2
+000178 2A31           00485     INCF WHITES
+00017A 8E23           00486     BSF COLOR3, 7
+00017C EF?? F???      00487     GOTO FEEDBACK_END
+                      00488     
+000180                00489 WHITE_CHECK0_2
+000180 BE22           00490     BTFSC COLOR2, 7
+000182 EF?? F???      00491     GOTO WHITE_CHECK0_1
+                      00492     
+000186 6222           00493     CPFSEQ COLOR2
+000188 EF?? F???      00494     GOTO WHITE_CHECK0_1
+00018C 2A31           00495     INCF WHITES
+00018E 8E22           00496     BSF COLOR2, 7
+000190 EF?? F???      00497     GOTO FEEDBACK_END
+                      00498 
+000194                00499 WHITE_CHECK0_1
+000194 BE21           00500     BTFSC COLOR1, 7
+000196 EF?? F???      00501     GOTO FEEDBACK_END
+                      00502     
+00019A 6221           00503     CPFSEQ COLOR1
+00019C EF?? F???      00504     GOTO FEEDBACK_END
+0001A0 2A31           00505     INCF WHITES
+0001A2 8E21           00506     BSF COLOR1, 7
+                      00507     
+0001A4                00508 FEEDBACK_END
+                      00509  
+0001A4 EF?? F???      00510     GOTO $                          ; loop forever     
+                      00511     END
+MPASM 5.86                          MAIN.ASM   11-16-2019  17:05:14         PAGE 11
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+BLACKS                            00000030
+BLACK_CHECK0                      00000096
+BLACK_CHECK1                      00000088
+BLACK_CHECK2                      0000007A
+BLACK_CHECK3                      0000006C
+CODE0                             00000004
+CODE1                             00000005
+COLOR0                            00000020
+COLOR1                            00000021
+COLOR2                            00000022
+COLOR3                            00000023
+FB0                               00000024
+FB1                               00000025
+FB2                               00000026
+FB3                               00000027
+FEEDBACK                          00000010
+FEEDBACK_END                      000001A4
+GUESS0                            00000010
+GUESS1                            00000011
+RNG                               00000010
+START                             00000000
+WHITES                            00000031
+WHITE_CHECK0                      00000164
+WHITE_CHECK0_1                    00000194
+WHITE_CHECK0_2                    00000180
+WHITE_CHECK1                      00000124
+WHITE_CHECK1_0                    00000154
+WHITE_CHECK1_2                    00000140
+WHITE_CHECK2                      000000E4
+WHITE_CHECK2_0                    00000114
+WHITE_CHECK2_1                    00000100
+WHITE_CHECK3                      000000A4
+WHITE_CHECK3_0                    000000D4
+WHITE_CHECK3_1                    000000C0
+X0                                00000000
+X1                                00000001
+X2                                00000002
+X3                                00000003
+_MAIN_PROG_01A4                   000001A4
+__18F46K22                        00000001
+__DEBUG                           
+__MPLAB_DEBUGGER_SIMULATOR        1
+
+Errors   :     0
+Warnings :    18 reported,     0 suppressed
+Messages :     0 reported,     0 suppressed
+
+
