@@ -180,51 +180,147 @@ RES_VECT  CODE    0x0000            ; processor reset vector
 MAIN_PROG CODE                      ; let linker place main program
 
 START
-    GUESS EQU 0x010
-    ; TODO Step #5 - Insert Your Program Here
 
-    MOVLW 0x55                      ; your instructions
-    GOTO $                          ; loop forever
-
-FEEDBACK
-    CODE_COPY EQU 0x020
-  
-    COLOR0 EQU 0x021
-    COLOR1 EQU 0x022
-    COLOR2 EQU 0x023
-    COLOR3 EQU 0x024
-    
-    MOVFF GUESS, CODE_COPY
-    
-    MOVF CODE_COPY, W
-    ANDLW B'00000011'
-    MOVWF COLOR0
-    
-    MOVF CODE_COPY, W
-    ANDLW B'00001100'
-    
-    MOVWF COLOR1
-    
-    MOVF CODE_COPY, W
-    ANDLW B'00110000'
-    MOVWF COLOR2
-    
-    MOVF CODE_COPY, W
-    ANDLW B'11000000'
-    MOVWF COLOR3
-    
-    
-    
-    
-    
 RNG
     X0 EQU 0x000
     X1 EQU 0x001
     X2 EQU 0x002
     X3 EQU 0x003
+ 
+    CODE0 EQU 0x004
+    CODE1 EQU 0x005
+ 
+    GUESS0 EQU 0x010
+    GUESS1 EQU 0x011
+
+FEEDBACK
+    ; unpack the guess into individual registers  
+    COLOR0 EQU 0x020
+    COLOR1 EQU 0x021
+    COLOR2 EQU 0x022
+    COLOR3 EQU 0x023
     
+    FB0 EQU 0x024
+    FB1 EQU 0x025
+    FB2 EQU 0x026
+    FB3 EQU 0x027
     
+    ; unpack first bype of code/guess
+    MOVFF CODE0, COLOR0
+    MOVFF GUESS0, FB0    
+    MOVLW H'F0'
+    ANDWF COLOR0, F
+    RRCF COLOR0, F
+    RRCF COLOR0, F
+    RRCF COLOR0, F
+    RRCF COLOR0, F
+    ANDWF FB0, F
+    RRCF FB0, F
+    RRCF FB0, F
+    RRCF FB0, F
+    RRCF FB0, F
     
+    ; unpack second bype of code/guess
+    MOVFF CODE0, COLOR1
+    MOVFF GUESS0, FB1  
+    MOVLW H'0F'
+    ANDWF COLOR1, F
+    ANDWF FB1, F
     
+    ; unpack third bype of code/guess
+    MOVFF CODE1, COLOR2
+    MOVFF GUESS1, FB2
+    MOVLW H'F0'
+    ANDWF COLOR2, F
+    RRCF COLOR2, F
+    RRCF COLOR2, F
+    RRCF COLOR2, F
+    RRCF COLOR2, F
+    ANDWF FB2, F
+    RRCF FB2, F
+    RRCF FB2, F
+    RRCF FB2, F
+    RRCF FB2, F
     
+    ; unpack forth bype of code/guess
+    MOVFF CODE1, COLOR3
+    MOVFF GUESS1, FB3  
+    MOVLW H'0F'
+    ANDWF COLOR3, F
+    ANDWF FB3, F
+    
+    ; count the blacks and whites
+    BLACKS EQU 0x030
+    WHITES EQU 0x031
+    CLRF BLACKS
+    CLRF WHITES
+    
+BLACK_CHECK3
+    MOVF FB3, W
+    CPFSEQ COLOR3
+    GOTO BLACK_CHECK2
+    INCF BLACKS
+    BSF FB3, 7
+    BSF COLOR3, 7
+    
+BLACK_CHECK2
+    MOVF FB2, W
+    CPFSEQ COLOR2
+    GOTO BLACK_CHECK1
+    INCF BLACKS
+    BSF FB2, 7
+    BSF COLOR2, 7
+    
+BLACK_CHECK1
+    MOVF FB1, W
+    CPFSEQ COLOR1
+    GOTO BLACK_CHECK0
+    INCF BLACKS
+    BSF FB1, 7
+    BSF COLOR1, 7
+    
+BLACK_CHECK0
+    MOVF FB0, W
+    CPFSEQ COLOR0
+    GOTO WHITE_CHECK0
+    INCF BLACKS
+    BSF FB0, 7
+    BSF COLOR0, 7
+
+WHITE_CHECK3
+    ; check for color matches if this guess hasn't been counted as a white
+    BTFSC FB3, 7
+    GOTO WHITE_CHECK2
+    MOVF FB3, W
+    ; skip this color if it was counted as a black
+    BTFSC COLOR2, 7
+    GOTO WHITE_CHECK3_1
+    CPFSEQ COLOR2
+    GOTO WHITE_CHECK3_1
+    INCF WHITES
+    BSF COLOR2, 7
+    GOTO WHITE_CHECK2
+    
+WHITE_CHECK3_1
+    BTFSC COLOR1, 7
+    GOTO WHITE_CHECK2
+    B
+
+WHITE_CHECK3_0   
+
+WHITE_CHECK2
+    BTFSS FB2, 7
+    GOTO WHITE_CHECK1
+    
+WHITE_CHECK1
+    BTFSS FB1, 7
+    GOTO WHITE_CHECK0
+    
+WHITE_CHECK0
+    BTFSS FB0, 7
+    GOTO FEEDBACK_END
+    
+FEEDBACK_END
+ 
+    GOTO $                          ; loop forever     
     END
