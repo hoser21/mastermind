@@ -280,7 +280,7 @@ RNG
 	   MOVWF 0xD3
     RCOUNT3 INCF CPURAND2
 	   DECFSZ 0xD3		;skip next instruction if zero
-	   BRA COUNT3		;jump back to top
+	   BRA RCOUNT3		;jump back to top
 	   INCF CPURAND1	;increase register
 	   DECFSZ 0xD2		;skip next instruction if zero
 	   BRA RCOUNT2		;jump back to register that holds count 2
