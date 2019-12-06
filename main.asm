@@ -172,8 +172,6 @@ RES_VECT  CODE    0x0000            ; processor reset vector
 ;
 ;*******************************************************************************
 
-; TODO INSERT ISR HERE
-
 ;*******************************************************************************
 ; MAIN PROGRAM
 ;*******************************************************************************
@@ -194,12 +192,17 @@ ptr_pos EQU 0xE7
 ptr_count EQU 0xE8
 cmd_byte EQU 0xE9	;used by LCD routines 
 
-    ;org		0x00
     GoTo	Main
 
 Main:
-    ;org		0x30
-    BSF TRISA,4			; sets PORTA bit 4 as an input -- SW2
+    BSF TRISA, 4    ; sets PORTA bit 4 as an input -- SW2
+    
+    ;enable portb for digital
+    MOVLB 0xF
+    MOVLW 0xF0
+    MOVWF ANSELB
+    BSF TRISB, 0    ; sets PORTB bit 0 as an input -- SW3
+    
     call	LCDInit		; Initialize PORTA, PORTD, and LCD Module
     call	LCDLine_1	;move cursor to line 1
     
@@ -238,7 +241,9 @@ Display:
     movWF	temp_wr
     call	d_write
     movLW	A'E'
-	
+    movWF	temp_wr
+    call	d_write
+    
     call	LCDLine_2
     movLW	A'S'
     movWF	temp_wr
@@ -268,24 +273,27 @@ Display:
     movWF	temp_wr
     call	d_write
     
-    ; start the random number generator
-    CALL RNG
+    ; wait for user start
+    call RNG  
  
 CODE_PACK1 EQU 0x500
 CODE_PACK2 EQU 0x501
-
+    
+    ; store the rng value as the code
+    CALL PACK
+    MOVFF 0xA10, CODE_PACK1
+    
+    MOVFF 0xA02, 0xA00
+    MOVFF 0xA03, 0xA01
+    CALL PACK
+    MOVFF 0xA10, CODE_PACK2
+    
 CODE1 EQU 0x510
 CODE2 EQU 0x511
 CODE3 EQU 0x512
 CODE4 EQU 0X513
-
-; TODO: configure the ports
  
-; TODO: welcome message
- 
-; TODO: rng loop
- 
-; TODO: store code
+    ; unpack the code
  
 UNPACK_CODE
     MOVFF CODE_PACK1, 0xA10
@@ -321,10 +329,10 @@ WT_CNT_ARRAY EQU 0x650
  
 GUESS_NUM EQU 0x660
     MOVLB 0x6
-    CLRF GUESS_NUM
+    CLRF GUESS_NUM, 1
     
 GUESS_LOOP
-    ; TODO: prompt for guess
+    CALL ENTER_GUESS
     
     ; unpack the guess
     MOVFF GUESS_PACK1, 0xA10
@@ -588,7 +596,7 @@ RCOUNT2 ; RESET bit 3
     MOVWF CPURAND3, 1
 RCOUNT3
     ; check if SW2 is pressed
-    BTFSC PORTA, 4
+    BTFSS PORTA, 4
     BRA RNG_WAIT
     
     DECFSZ CPURAND3, 1
@@ -611,6 +619,7 @@ RNG_WAIT
     BTFSS PORTA, 4
     BRA $-2
     RETURN
+ 
 
 ;*******************************************************************************
 ; I/O SUBROUTINES
@@ -620,18 +629,44 @@ WAIT_BP
     ; output at 0xA00, 0 if SW2, 1 if SW3
     ; SW2 = RA4 = PORTA, 4
     ; SW3 = RB0 = PORTB, 0
-;    BTFSS	PORTA, 4
-;    BRA		WT_RELEASE1
-;    BRA    	WT_PRESS1
-;    
-;    WT_RELEASE1    
-;    BTFSS	PORTA,4
-;    BRA		$-2
+    MOVLB 0xA
     
+    BTFSS	PORTA, 4
+    BRA		WT_RELEASEA
+    BTFSS	PORTB, 0
+    BRA		WT_RELEASEB
+
+    BRA    	WAIT_BP
+    
+WT_RELEASEA   
+    BTFSS	PORTA,4
+    BRA		$-2
+    CLRF	0xA00, 1
+    RETURN
+    
+WT_RELEASEB    
+    BTFSS	PORTB,0
+    BRA		$-2
+    BSF		0xA00, 0, 1
+    RETURN
     
     
 ENTER_GUESS
-    ; prompts user for a guess and stores it at 0xA00 - 0xA03
+    ; prompts user for a guess and stores it at 0xA10 - 0xA13
+    ; initalize guess to 0000
+    
+    MOVLB 0xA
+    
+    CLRF 0xA10
+    CLRF 0xA11
+    CLRF 0xA12
+    CLRF 0xA13
+    
+    CALL WAIT_BP
+    
+    BTFSS 0xA00, 1
+    BRA INC_GUESS
+    BRA NEXT_VALUE
     
     
 ; *****************  Low-Level LCD Routines  *******************
