@@ -561,5 +561,152 @@ WHITE_CHECK0_1
     
 FEEDBACK_END
  
+ ;********************Aracely's code below:
+ #include <p18f46k22.inc>
+COUNTER	EQU 0xE3	;counter for delay loops
+delay EQU 0xE4		;amount  of  delay for delay subroutines
+temp_wr EQU 0xE5	;temporary register for LCD written data
+temp_rd	EQU 0xE6	;temporary register for data read from the LCD controller
+ptr_pos EQU 0xE7
+ptr_count EQU 0xE8
+cmd_byte EQU 0xE9	;used by LCD routines 
+
+    GOTO Main
+ 
+Main:
+;PORTA EQU 0xF60	;set port location 
+    BSF TRISA,4		;sets PORTA bit 4 as an input -- SW2
+ 
+    ;set up counters
+Count0 EQU 0xE0
+Count1 EQU 0xE1
+Count2 EQU 0xE2 ;counter for delays
+ 
+    ;here will be setting up the ports for the physical board - PORTA, LCD
+    call	LCDInit		;Initialize PORTA and LCD Module
+    call	LCDLine_1	;move cursor to line 1
+    
+Display:    
+    call	LCDLine_1
+    movLW	A'W'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'E'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'L'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'C'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'O'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'M'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'E'
+	
+    call	LCDLine_2
+    movLW	A'S'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'W'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'2'
+    movWF	temp_wr
+    call	d_write
+    movLW	A':'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'S'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'T'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'A'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'R'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'T'
+    movWF	temp_wr
+    call	d_write
+    
+    NOP ;cycle
+    NOP
+    NOP
+    
+    
+;***********RNG
+startWait
+   
+CPURAND0 EQU 0x0
+CPURAND1 EQU 0x1
+CPURAND2 EQU 0x2
+CPURAND3 EQU 0x3
+ 
+    ;initialize counters to zero
+    MOVLW 0H
+    MOVWF CPURAND0
+    MOVLW 0H
+    MOVWF CPURAND1
+    MOVLW 0H
+    MOVWF CPURAND2
+    MOVLW 0H
+    MOVWF CPURAND3
+    
+    ;downward count
+    MOVLW 5H
+    MOVWF 0xD1
+    MOVLW 5H
+    MOVWF 0xD2
+    MOVLW 5H
+    MOVWF 0xD3
+    
+    BTFSS PORTA,4		
+    BRA startProgram	
+    
+    ;begin the random number generator for play to guess
+    ;register to register counts
+RCOUNT1 MOVLW 0H
+	   MOVWF CPURAND1
+RCOUNT2 MOVLW 0H
+	   MOVWF CPURAND2
+	   MOVLW 5H
+	   MOVWF 0xD3
+RCOUNT3 INCF CPURAND2
+	   BTFSS PORTA,4	;if button is pushed
+	   DECFSZ 0xD3		;skip next instruction if zero
+	   BRA RCOUNT3		;jump back to top
+	   INCF CPURAND1	;increase register
+	   BTFSS PORTA,4	
+	   DECFSZ 0xD2		;skip next instruction if zero
+	   BRA RCOUNT2		;jump back to register that holds count 2
+	   INCF CPURAND0
+	   BTFSS PORTA,4	
+	   DECFSZ 0xD1		
+	   BRA RCOUNT1
+	   DECFSZ CPURAND0
+	  
+    GOTO startWait
+    
+startProgram    
+    BTFSS	PORTA,4 ;wait for SW2 to be pressed
+    BRA		$-2	;wait for SW2 release	
+
+
+	
+#Include LCD_p18LCD_Subs_New.asm  ; Contains:
+; --- LCDInit:		>> initialize
+; --- LCDLine_1:	>> Cursor to Line_1
+; --- LCDLine_2:	>> Cursor to to Line_2
+; --- i_write:  	>> instruction write
+; --- d_write:		>> data        write
+ 
     GOTO $                          ; loop forever     
     END
