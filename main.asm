@@ -267,6 +267,9 @@ Display:
     movLW	A'T'
     movWF	temp_wr
     call	d_write
+    
+    ; start the random number generator
+    CALL RNG
  
 CODE_PACK1 EQU 0x500
 CODE_PACK2 EQU 0x501
@@ -584,6 +587,10 @@ RCOUNT2 ; RESET bit 3
     MOVLW 5H
     MOVWF CPURAND3, 1
 RCOUNT3
+    ; check if SW2 is pressed
+    BTFSC PORTA, 4
+    BRA RNG_WAIT
+    
     DECFSZ CPURAND3, 1
     BRA RCOUNT3
     ; R3 is 0
@@ -600,6 +607,10 @@ RCOUNT3
     MOVWF CPURAND0, 1
     BRA RCOUNT0
  
+RNG_WAIT
+    BTFSS PORTA, 4
+    BRA $-2
+    RETURN
 
 ;*******************************************************************************
 ; I/O SUBROUTINES
@@ -632,5 +643,3 @@ ENTER_GUESS
 ; --- i_write:  	>> instruction write
 ; --- d_write:		>> data        write
     END
-    
-
