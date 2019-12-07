@@ -651,22 +651,109 @@ WT_RELEASEB
     RETURN
     
     
+CLEAR_LCD
+    ; clears the LCD screen
+    movLW	1H
+    movWF	temp_wr
+    call	i_write
+    RETURN
+    
+    
 ENTER_GUESS
     ; prompts user for a guess and stores it at 0xA10 - 0xA13
     ; initalize guess to 0000
     
     MOVLB 0xA
     
-    CLRF 0xA10
-    CLRF 0xA11
-    CLRF 0xA12
-    CLRF 0xA13
+    CLRF 0xA10, 1
+    CLRF 0xA11, 1
+    CLRF 0xA12, 1
+    CLRF 0xA13, 1
+    
+    ; update display to prompt user
+    CALL CLEAR_LCD
+    
+    ; print "SW2:++ SW3:NEXT" to line 1
+    call	LCDLine_1
+    movLW	A'S'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'W'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'2'
+    movWF	temp_wr
+    call	d_write
+    movLW	A':'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'+'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'+'
+    movWF	temp_wr
+    call	d_write
+    movLW	A' '
+    movWF	temp_wr
+    call	d_write
+    movLW	A'S'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'W'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'3'
+    movWF	temp_wr
+    call	d_write
+    movLW	A':'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'N'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'E'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'X'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'T'
+    movWF	temp_wr
+    call	d_write
+    
+    ; print "GUESS: 0" to line 2
+    call	LCDLine_1
+    movLW	A'G'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'U'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'E'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'S'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'S'
+    movWF	temp_wr
+    call	d_write
+    movLW	A':'
+    movWF	temp_wr
+    call	d_write
+    movLW	A' '
+    movWF	temp_wr
+    call	d_write
+    movLW	A'0'
+    movWF	temp_wr
+    call	d_write
     
     CALL WAIT_BP
     
     BTFSS 0xA00, 1
     BRA INC_GUESS
     BRA NEXT_VALUE
+    
     
     
 ; *****************  Low-Level LCD Routines  *******************
