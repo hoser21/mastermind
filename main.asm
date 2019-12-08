@@ -203,21 +203,12 @@ Main:
     MOVWF ANSELB
     BSF TRISB, 0    ; sets PORTB bit 0 as an input -- SW3
     
+    MOVLB 0x0
+    
     call	LCDInit		; Initialize PORTA, PORTD, and LCD Module
     call	LCDLine_1	;move cursor to line 1
     
-; ---------------- Wait a while = 1 x256 x256 x3 uSec = 0.1 sec
-    movLW	1
-    movWF	Count2
-    clrF	Count1
-    clrF	Count0
-WLoo	
-    decFsZ	Count0
-    bra		WLoo
-    decFsZ	Count1
-    bra		WLoo
-    decFsZ	Count2
-    bra		WLoo	
+    CALL LCD_DELAY
     
 Display:
     ; print welcome message
@@ -279,6 +270,7 @@ Display:
 CODE_PACK1 EQU 0x500
 CODE_PACK2 EQU 0x501
     
+    MOVLB 0xA
     ; store the rng value as the code
     CALL PACK
     MOVFF 0xA10, CODE_PACK1
@@ -318,14 +310,29 @@ GUESS1 EQU 0x610
 GUESS2 EQU 0x611
 GUESS3 EQU 0x612
 GUESS4 EQU 0x613
+
+; array allocation
+GUESS_PACK_ARRAY EQU 0x20
+BLK_CNT_ARRAY EQU 0x40
+WT_CNT_ARRAY EQU 0x50
  
-GUESS_PACK_ARRAY EQU 0x620
-BLK_CNT_ARRAY EQU 0x640
-WT_CNT_ARRAY EQU 0x650
+; array pointers
+GUESS_PACK_ARRAY_HEAD EQU 0x670
+BLK_CNT_ARRAY_HEAD EQU 0x671
+WT_CNT_ARRAY_HEAD EQU 0x672
+ 
+; feedback registers
+BLACK_CNT EQU 0x700
+WHITE_CNT EQU 0x701
     
-    LFSR 0, GUESS_PACK_ARRAY
-    LFSR 1, BLK_CNT_ARRAY
-    LFSR 2, WT_CNT_ARRAY
+    ; initialize array pointers
+    MOVLB 0x6
+    MOVLW GUESS_PACK_ARRAY
+    MOVWF GUESS_PACK_ARRAY_HEAD, 1
+    MOVLW BLK_CNT_ARRAY
+    MOVWF BLK_CNT_ARRAY_HEAD, 1
+    MOVLW WT_CNT_ARRAY
+    MOVWF WT_CNT_ARRAY_HEAD, 1
  
 GUESS_NUM EQU 0x660
     MOVLB 0x6
@@ -334,16 +341,12 @@ GUESS_NUM EQU 0x660
 GUESS_LOOP
     CALL ENTER_GUESS
     
-    ; unpack the guess
-    MOVFF GUESS_PACK1, 0xA10
-    CALL UNPACK
-    MOVFF 0xA00, GUESS1
-    MOVFF 0xA01, GUESS2
+    MOVLB 0xA
     
-    MOVFF GUESS_PACK2, 0xA10
-    CALL UNPACK
-    MOVFF 0xA00, GUESS3
-    MOVFF 0xA01, GUESS4
+    MOVFF 0xA10, GUESS1
+    MOVFF 0xA11, GUESS2
+    MOVFF 0xA12, GUESS3
+    MOVFF 0xA13, GUESS4
     
     ; determine blacks and whites
     MOVFF CODE1, 0xA00
@@ -354,42 +357,71 @@ GUESS_LOOP
     MOVFF GUESS2, 0xA05
     MOVFF GUESS3, 0xA06
     MOVFF GUESS4, 0xA07
-    CALL BLK_CNT
     
     ; store blacks
-    MOVFF 0xA10, INDF1
-    INCF FSR1
+    CALL BLK_CNT
+    LFSR 0, BLK_CNT_ARRAY_HEAD
+    MOVLW 6H
+    MOVWF FSR1H
+    MOVFF INDF0, FSR1L
     
-    CALL WT_CNT
+    MOVFF 0xA10, INDF1
+    MOVFF 0xA10, BLACK_CNT
+    INCF INDF0, F
     
     ; store whites
-    MOVFF 0xA10, INDF2
-    INCF FSR2
-        
-    ; TODO: display feedback
+    CALL WT_CNT
+    LFSR 0, WT_CNT_ARRAY_HEAD
+    MOVLW 6H
+    MOVWF FSR1H
+    MOVFF INDF0, FSR1L
     
-    ; TOOD: check for win condition
+    MOVFF 0xA10, INDF1
+    MOVFF 0xA10, WHITE_CNT
+    INCF INDF0, F
+    
+    ; show the feedback to the user
+    CALL SHOW_FEEDBACK
+    CALL CHECK_WIN
     
     ; pack and store the guess
+    LFSR 0, GUESS_PACK_ARRAY_HEAD
+    MOVLW 6H
+    MOVWF FSR1H
+    MOVFF INDF0, FSR1L
+    
     MOVFF GUESS1, 0xA00
     MOVFF GUESS2, 0xA01
     CALL PACK
+   
+    MOVFF 0xA10, INDF1
+    INCF INDF0, F
     
-    MOVFF 0xA10, INDF0
-    INCF INDF0
+    MOVLW 6H
+    MOVWF FSR1H
+    MOVFF INDF0, FSR1L
    
     MOVFF GUESS3, 0xA00
     MOVFF GUESS4, 0xA01
     CALL PACK
     
-    MOVFF 0xA10, INDF0
-    INCF INDF0
+    MOVFF 0xA10, INDF1
+    INCF INDF0, F
     
+    ; update number of guesses and check for 12 guesses
     MOVLB 0x6
-    INCF GUESS_NUM, 1
+    INCF GUESS_NUM, F, 1
     
-    GOTO GUESS_LOOP
+    MOVLW 0CH
+    SUBWF GUESS_NUM, W, 1
+    BZ GOTO_GAMEOVER
+    
+    BRA GUESS_LOOP
 
+GOTO_GAMEOVER
+    GOTO GAMEOVER
+    
+    
 ;*******************************************************************************
 ; SUBROUTINES
 ;*******************************************************************************
@@ -408,7 +440,7 @@ PACK
     MOVLW H'F0'
     ANDWF 0xA01, F, 1
     
-    ; zero out the low nibble of r1
+    ; zero out the high nibble of r1
     MOVLW H'0F'
     ANDWF 0xA00, W, 1
     
@@ -532,7 +564,7 @@ WT_CNT_LOOP_1
     MOVLW 4H ; reset inner loop counter
     MOVWF 0xA21, 1
     
-    INCF FSR0L
+    INCF FSR0L, F
     BRA WT_CNT_LOOP_1
     
 WT_CNT_LOOP_2
@@ -543,7 +575,7 @@ WT_CNT_LOOP_2
     DCFSNZ 0xA21, F, 1
     RETURN
     
-    INCF FSR1L
+    INCF FSR1L, F
     BRA WT_CNT_LOOP_2
     
 WT_CNT_CMP
@@ -660,18 +692,14 @@ CLEAR_LCD
     
     
 ENTER_GUESS
-    ; prompts user for a guess and stores it at 0xA10 - 0xA13
-    ; initalize guess to 0000
-    
-    MOVLB 0xA
-    
-    CLRF 0xA10, 1
-    CLRF 0xA11, 1
-    CLRF 0xA12, 1
-    CLRF 0xA13, 1
-    
+    ; prompts user for a guess and stores it at 0xA10 - 0xA11
+    ; as a pack
+        
     ; update display to prompt user
+    MOVLB 0x0
     CALL CLEAR_LCD
+    
+    CALL LCD_DELAY
     
     ; print "SW2:++ SW3:NEXT" to line 1
     call	LCDLine_1
@@ -721,8 +749,8 @@ ENTER_GUESS
     movWF	temp_wr
     call	d_write
     
-    ; print "GUESS: 0" to line 2
-    call	LCDLine_1
+    ; print "GUESS:" to line 2
+    call	LCDLine_2
     movLW	A'G'
     movWF	temp_wr
     call	d_write
@@ -741,19 +769,398 @@ ENTER_GUESS
     movLW	A':'
     movWF	temp_wr
     call	d_write
-    movLW	A' '
-    movWF	temp_wr
-    call	d_write
-    movLW	A'0'
-    movWF	temp_wr
-    call	d_write
+    
+    ; initalize guess to 0000
+    MOVLB 0xA
+    
+    CLRF 0xA10, 1
+    CLRF 0xA11, 1
+    CLRF 0xA12, 1
+    CLRF 0xA13, 1
+   
+ENTER_CNT EQU 0xA20
+    MOVLW 5H
+    MOVWF ENTER_CNT, 1
+    
+    LFSR 0, 0xA10
+    
+ENTER_LOOP
+    DCFSNZ ENTER_CNT, 1
+    BRA ENTER_DONE
+    
+;    MOVLW 14H
+;    MOVWF temp_wr
+;    CALL i_write
+    
+    MOVLB 0x0
+    
+    MOVLW A'0'
+    MOVWF INDF0  
+    MOVWF temp_wr
+    CALL d_write
+    
+ENTER_PROMPT
+    MOVLB 0xA
     
     CALL WAIT_BP
     
-    BTFSS 0xA00, 1
+    BTFSS 0xA00, 0, 1
     BRA INC_GUESS
     BRA NEXT_VALUE
+
+INC_GUESS
+    MOVLW 35H
+    SUBWF INDF0, W
     
+    BZ RESET_GUESS
+    INCF INDF0, F
+
+ENTER_UPDATE_LCD
+    MOVLB 0x0
+    
+    MOVLW 10H
+    MOVWF temp_wr
+    CALL i_write
+   
+    MOVFF INDF0, temp_wr
+    CALL d_write
+    BRA ENTER_PROMPT
+    
+RESET_GUESS
+    MOVLW A'0'
+    MOVWF INDF0
+    BRA ENTER_UPDATE_LCD
+    
+NEXT_VALUE
+    MOVLW 30H
+    SUBWF INDF0, F
+    
+    INCF FSR0L, F
+    BRA ENTER_LOOP
+    
+ENTER_DONE
+    RETURN
+
+    
+SHOW_FEEDBACK
+    ; prints the following message to the display
+    ; line 1: "B: <BLACK CNT> W: <WHITE_CNT>"
+    ; line 2: "SW2/3: CONTINUE"
+    
+    MOVLB 0x0
+    CALL CLEAR_LCD
+    CALL LCD_DELAY
+  
+    call	LCDLine_1
+    movLW	A'B'
+    movWF	temp_wr
+    call	d_write
+    movLW	A':'
+    movWF	temp_wr
+    call	d_write
+    movLW	A' '
+    movWF	temp_wr
+    call	d_write
+   
+    MOVLB 0x7
+    MOVLW 30H
+    ADDWF BLACK_CNT, W, 1
+    
+    MOVLB 0x0
+    MOVWF temp_wr
+    CALL d_write
+    
+    movLW	A' '
+    movWF	temp_wr
+    call	d_write
+    movLW	A'W'
+    movWF	temp_wr
+    call	d_write
+    movLW	A':'
+    movWF	temp_wr
+    call	d_write
+    movLW	A' '
+    movWF	temp_wr
+    call	d_write
+    
+    MOVLB 0x7
+    MOVLW 30H
+    ADDWF WHITE_CNT, W, 1
+    
+    MOVLB 0x0
+    MOVWF temp_wr
+    CALL d_write
+    
+    call	LCDLine_2
+    movLW	A'S'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'W'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'2'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'/'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'3'
+    movWF	temp_wr
+    call	d_write
+    movLW	A':'
+    movWF	temp_wr
+    call	d_write
+    movLW	A' '
+    movWF	temp_wr
+    call	d_write
+    movLW	A'C'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'O'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'N'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'T'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'I'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'U'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'E'
+    movWF	temp_wr
+    call	d_write
+ 
+    CALL WAIT_BP
+    
+    RETURN
+    
+    
+CHECK_WIN
+    MOVLB 0x7
+    
+    MOVLW 4H
+    SUBWF BLACK_CNT, W, 1
+    
+    BZ WINNER
+    RETURN
+    
+WINNER
+    ; print the following message
+    ; line 1: "CONGRATULATIONS"
+    ; line 2: "YOU'VE WON!"
+    MOVLB 0x0
+    CALL CLEAR_LCD
+    CALL LCD_DELAY
+    
+    call	LCDLine_1
+    movLW	A'C'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'O'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'N'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'G'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'R'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'A'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'T'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'U'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'L'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'A'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'T'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'I'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'O'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'N'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'S'
+    movWF	temp_wr
+    call	d_write
+    
+    call	LCDLine_2
+    movLW	A'Y'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'O'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'U'
+    movWF	temp_wr
+    call	d_write
+    movLW	27H
+    movWF	temp_wr
+    call	d_write
+    movLW	A'V'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'E'
+    movWF	temp_wr
+    call	d_write
+    movLW	A' '
+    movWF	temp_wr
+    call	d_write
+    movLW	A'W'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'O'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'N'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'!'
+    movWF	temp_wr
+    call	d_write
+    
+    GOTO $
+    
+    
+GAMEOVER
+    ; print the following message
+    ; line 1: "YOU"VE LOST :("
+    ; line 2: "GOOD LUK NXT TIM"
+    MOVLB 0x0
+    CALL CLEAR_LCD
+    CALL LCD_DELAY
+    
+    call	LCDLine_1
+    movLW	A'Y'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'O'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'U'
+    movWF	temp_wr
+    call	d_write
+    movLW	27H
+    movWF	temp_wr
+    call	d_write
+    movLW	A'V'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'E'
+    movWF	temp_wr
+    call	d_write
+    movLW	A' '
+    movWF	temp_wr
+    call	d_write
+    movLW	A'L'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'O'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'S'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'T'
+    movWF	temp_wr
+    call	d_write
+    movLW	A' '
+    movWF	temp_wr
+    call	d_write
+    movLW	A':'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'('
+    movWF	temp_wr
+    call	d_write
+    
+    call	LCDLine_2
+    movLW	A'G'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'O'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'O'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'D'
+    movWF	temp_wr
+    call	d_write
+    movLW	A' '
+    movWF	temp_wr
+    call	d_write
+    movLW	A'L'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'U'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'K'
+    movWF	temp_wr
+    call	d_write
+    movLW	A' '
+    movWF	temp_wr
+    call	d_write
+    movLW	A'N'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'X'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'T'
+    movWF	temp_wr
+    call	d_write
+    movLW	A' '
+    movWF	temp_wr
+    call	d_write
+    movLW	A'T'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'I'
+    movWF	temp_wr
+    call	d_write
+    movLW	A'M'
+    movWF	temp_wr
+    call	d_write
+    
+    GOTO $
+    
+    
+LCD_DELAY
+; ---------------- Wait a while = 1 x256 x256 x3 uSec = 0.1 sec
+    movLW	1
+    movWF	Count2
+    clrF	Count1
+    clrF	Count0
+WLoo	
+    decFsZ	Count0
+    bra		WLoo
+    decFsZ	Count1
+    bra		WLoo
+    decFsZ	Count2
+    bra		WLoo
+    RETURN
     
     
 ; *****************  Low-Level LCD Routines  *******************
