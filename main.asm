@@ -180,10 +180,10 @@ MAIN_PROG CODE                      ; let linker place main program
 
 START
  
-; set up LCD screen
+; define memeory addresses for LCD display
 Count0 EQU 0xE0
 Count1 EQU 0xE1
-Count2 EQU 0xE2 ;counter for delays
+Count2 EQU 0xE2		;counter for delays
 COUNTER	EQU 0xE3	;counter for delay loops
 delay EQU 0xE4		;amount  of  delay for delay subroutines
 temp_wr EQU 0xE5	;temporary register for LCD written data
@@ -197,7 +197,7 @@ cmd_byte EQU 0xE9	;used by LCD routines
 Main:
     BSF TRISA, 4    ; sets PORTA bit 4 as an input -- SW2
     
-    ;enable portb for digital
+    ; enable PORTB for digital
     MOVLB 0xF
     MOVLW 0xF0
     MOVWF ANSELB
@@ -206,9 +206,9 @@ Main:
     MOVLB 0x0
     
     call	LCDInit		; Initialize PORTA, PORTD, and LCD Module
-    call	LCDLine_1	;move cursor to line 1
+    call	LCDLine_1	; move cursor to line 1
     
-    CALL LCD_DELAY
+    CALL LCD_DELAY		; wait a bit for the LCD to initalize
     
 Display:
     ; print welcome message
@@ -264,14 +264,17 @@ Display:
     movWF	temp_wr
     call	d_write
     
-    ; wait for user start
+    ; call the RNG subroutine that randomizes a code until the user is read
     call RNG  
- 
+
+; temporary addresses to store the packed code
 CODE_PACK1 EQU 0x500
 CODE_PACK2 EQU 0x501
     
     MOVLB 0xA
+    
     ; store the rng value as the code
+    ; because the code is two bytes, we call pack twice
     CALL PACK
     MOVFF 0xA10, CODE_PACK1
     
@@ -279,15 +282,15 @@ CODE_PACK2 EQU 0x501
     MOVFF 0xA03, 0xA01
     CALL PACK
     MOVFF 0xA10, CODE_PACK2
-    
+
+; temporary addresses to store the unpacked code
 CODE1 EQU 0x510
 CODE2 EQU 0x511
 CODE3 EQU 0x512
 CODE4 EQU 0X513
- 
-    ; unpack the code
- 
+
 UNPACK_CODE
+    ; for practice, unpack the code at the temporary address
     MOVFF CODE_PACK1, 0xA10
     CALL UNPACK
     MOVFF 0xA00, CODE1
@@ -303,6 +306,7 @@ UNPACK_CODE
     MOVFF CODE3, 0xA02
     MOVFF CODE4, 0xA03
 
+; temporary addresses to store packed and unpacked guesses
 GUESS_PACK1 EQU 0x600
 GUESS_PACK2 EQU 0x601
  
@@ -311,17 +315,18 @@ GUESS2 EQU 0x611
 GUESS3 EQU 0x612
 GUESS4 EQU 0x613
 
-; array allocation
+; array allocation: this is where all the guesses and feedback will be stored
 GUESS_PACK_ARRAY EQU 0x20
 BLK_CNT_ARRAY EQU 0x40
 WT_CNT_ARRAY EQU 0x50
  
-; array pointers
+; array pointers: this stores the next location of where we want to store
+;		  a guess and its feedback
 GUESS_PACK_ARRAY_HEAD EQU 0x670
 BLK_CNT_ARRAY_HEAD EQU 0x671
 WT_CNT_ARRAY_HEAD EQU 0x672
  
-; feedback registers
+; temporary feedback registers
 BLACK_CNT EQU 0x700
 WHITE_CNT EQU 0x701
     
@@ -333,16 +338,33 @@ WHITE_CNT EQU 0x701
     MOVWF BLK_CNT_ARRAY_HEAD, 1
     MOVLW WT_CNT_ARRAY
     MOVWF WT_CNT_ARRAY_HEAD, 1
- 
+
+; stores the current amount of guesses
+; initialize the count to zero
 GUESS_NUM EQU 0x660
     MOVLB 0x6
     CLRF GUESS_NUM, 1
-    
+
+;*******************************************************************************
+; MAIN GUESS LOOP
+;*******************************************************************************
+  
 GUESS_LOOP
+    ; 1. prompt user to enter a guess
+    ; 2. determine the amount of blacks
+    ; 3. store the amount of blacks in the array
+    ; 4. determine the amount of whites
+    ; 5. store the amount of whites in the arary
+    ; 6. display the feedback to the LCD
+    ; 7. check if the user won
+    ; 8. pack the guess and store it in the array
+    ; 9. incremenent the guess counter; if we guessed 12 times, it's gameover
+    ; 10. repeat 
+    
     CALL ENTER_GUESS
     
+    ; store the user input in the temporary guess registers
     MOVLB 0xA
-    
     MOVFF 0xA10, GUESS1
     MOVFF 0xA11, GUESS2
     MOVFF 0xA12, GUESS3
@@ -358,7 +380,11 @@ GUESS_LOOP
     MOVFF GUESS3, 0xA06
     MOVFF GUESS4, 0xA07
     
-    ; store blacks
+    ; store the black count in the array
+    
+    ; the array head is a double pointer, so it needs to be dereferenced twice
+    ; to store the data; afterwards, we increment the location of the first
+    ; dereference to move the array head to the next location
     CALL BLK_CNT
     LFSR 0, BLK_CNT_ARRAY_HEAD
     MOVLW 6H
@@ -369,7 +395,7 @@ GUESS_LOOP
     MOVFF 0xA10, BLACK_CNT
     INCF INDF0, F
     
-    ; store whites
+    ; store the whites count in the array (use previous method to store)
     CALL WT_CNT
     LFSR 0, WT_CNT_ARRAY_HEAD
     MOVLW 6H
@@ -380,11 +406,12 @@ GUESS_LOOP
     MOVFF 0xA10, WHITE_CNT
     INCF INDF0, F
     
-    ; show the feedback to the user
+    ; show the feedback to the user and check if they won
     CALL SHOW_FEEDBACK
     CALL CHECK_WIN
     
-    ; pack and store the guess
+    ; pack and store the guess (use the previous method to store, but we
+    ; need to use two registers to store a guess)
     LFSR 0, GUESS_PACK_ARRAY_HEAD
     MOVLW 6H
     MOVWF FSR1H
@@ -412,7 +439,7 @@ GUESS_LOOP
     MOVLB 0x6
     INCF GUESS_NUM, F, 1
     
-    MOVLW 0CH
+    MOVLW 0CH ; hex for 12 decimal
     SUBWF GUESS_NUM, W, 1
     BZ GOTO_GAMEOVER
     
@@ -648,6 +675,7 @@ RCOUNT3
     BRA RCOUNT0
  
 RNG_WAIT
+    ; check if the user pressed the switch, if so, return
     BTFSS PORTA, 4
     BRA $-2
     RETURN
@@ -656,6 +684,7 @@ RNG_WAIT
 ;*******************************************************************************
 ; I/O SUBROUTINES
 ;*******************************************************************************
+    
 WAIT_BP
     ; waits for a button press and release and returns which button got pushed
     ; output at 0xA00, 0 if SW2, 1 if SW3
@@ -693,7 +722,9 @@ CLEAR_LCD
     
 ENTER_GUESS
     ; prompts user for a guess and stores it at 0xA10 - 0xA11
-    ; as a pack
+    ; the user can press SW2 to increase the selected value (mod 6)
+    ; once selected, the user can press SW3 to enter the next guess, until
+    ; all 4 values are entered
         
     ; update display to prompt user
     MOVLB 0x0
@@ -777,29 +808,36 @@ ENTER_GUESS
     CLRF 0xA11, 1
     CLRF 0xA12, 1
     CLRF 0xA13, 1
-   
+  
+; counter for the number of entered values (we want 4 values)
 ENTER_CNT EQU 0xA20
-    MOVLW 5H
+    MOVLW 5H	; initialize the count to # of guesses + 1
     MOVWF ENTER_CNT, 1
     
+    ; we store all the values using the indirect register in ASCII to easily
+    ; print the next value. once the value has been submitted, we convert the
+    ; value to an integer
     LFSR 0, 0xA10
     
 ENTER_LOOP
+    ; 1. check if all the guesses were entered and decrement the count
+    ; 2. print the next value and wait for the user to press a button
+    ; 3. if SW2 is pressed, increment the guess in memory and print it;
+    ;	 if SW3 is pressed, convert the ASCII value to an interger and go
+    ;    to the next loop
     DCFSNZ ENTER_CNT, 1
     BRA ENTER_DONE
     
-;    MOVLW 14H
-;    MOVWF temp_wr
-;    CALL i_write
-    
     MOVLB 0x0
     
+    ; prints 0 to the display
     MOVLW A'0'
     MOVWF INDF0  
     MOVWF temp_wr
     CALL d_write
     
 ENTER_PROMPT
+    ; waits for the user and calls the according subroutine
     MOVLB 0xA
     
     CALL WAIT_BP
@@ -809,6 +847,7 @@ ENTER_PROMPT
     BRA NEXT_VALUE
 
 INC_GUESS
+    ; increment the value and check to be mod 6
     MOVLW 35H
     SUBWF INDF0, W
     
@@ -816,6 +855,7 @@ INC_GUESS
     INCF INDF0, F
 
 ENTER_UPDATE_LCD
+    ; overwrites the current value to the LCD with the incremented value
     MOVLB 0x0
     
     MOVLW 10H
@@ -843,7 +883,8 @@ ENTER_DONE
 
     
 SHOW_FEEDBACK
-    ; prints the following message to the display
+    ; prints the following message to the display and waits for the user
+    ; to press a button to continue
     ; line 1: "B: <BLACK CNT> W: <WHITE_CNT>"
     ; line 2: "SW2/3: CONTINUE"
     
@@ -941,6 +982,7 @@ SHOW_FEEDBACK
     
     
 CHECK_WIN
+    ; check if the user won by seeing if there are 4 blacks
     MOVLB 0x7
     
     MOVLW 4H
@@ -950,7 +992,7 @@ CHECK_WIN
     RETURN
     
 WINNER
-    ; print the following message
+    ; print the following message and stall the program
     ; line 1: "CONGRATULATIONS"
     ; line 2: "YOU'VE WON!"
     MOVLB 0x0
@@ -1043,7 +1085,7 @@ WINNER
     
     
 GAMEOVER
-    ; print the following message
+    ; print the following message and stall the program
     ; line 1: "YOU"VE LOST :("
     ; line 2: "GOOD LUK NXT TIM"
     MOVLB 0x0
