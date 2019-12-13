@@ -439,6 +439,9 @@ GUESS_LOOP
     MOVLB 0x6
     INCF GUESS_NUM, F, 1
     
+    ; clear the watchdog timer so we don't time out
+    CLRWDT
+    
     MOVLW 0CH ; hex for 12 decimal
     SUBWF GUESS_NUM, W, 1
     BZ GOTO_GAMEOVER
@@ -835,6 +838,9 @@ ENTER_LOOP
     MOVWF INDF0  
     MOVWF temp_wr
     CALL d_write
+    
+    ; clear the watchdog timer so we don't time out
+    CLRWDT
     
 ENTER_PROMPT
     ; waits for the user and calls the according subroutine
